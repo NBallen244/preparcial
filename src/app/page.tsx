@@ -1,4 +1,4 @@
-import Image from "next/image";
+
 import ListaAutores from "./components/listaAutores";
 
 export default function Home() {
