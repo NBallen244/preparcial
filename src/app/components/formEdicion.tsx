@@ -1,16 +1,15 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Autor } from "./listaAutores";
-import { useRouter } from "next/navigation";
 
-const FormCreacion = () => {
+const FormEdicion = ({id}:{id:number}) => {
     const [form, setForm] = useState<Autor>({
+        id:0,
         birthDate:new Date(),
         name:"",
         description:"",
         image:""
     });
-    const router=useRouter();
     const [errores, setErrors] = useState<{ [key: string]: string }>({});
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -67,19 +66,19 @@ const FormCreacion = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         console.log(JSON.stringify(form))
-        const envio=await fetch("http://127.0.0.1:8080/api/authors", {
-            method:'POST',
+        const envio=await fetch(`http://127.0.0.1:8080/api/authors/${id}`, {
+            method:'PUT',
             headers: {
             'Content-Type': 'application/json'},
             body:JSON.stringify(form)
         });
         const res=await envio.ok;
         if (res) {
-            alert(`Autor ${form.name}`+" creado con éxito");
-            router.push("/authors");
+            alert(`Autor ${form.name}`+" editado con éxito");
+            window.location.reload();
         }
         else {
-            alert("Error al crear autor. Por favor revisa los datos")
+            alert("Error al editar autor. Por favor revisa los datos")
         }
         
     };
@@ -89,10 +88,25 @@ const FormCreacion = () => {
         return formattedDate2;
     }
 
+    useEffect(()=>{
+        fetch(`http://127.0.0.1:8080/api/authors/${id}`).then(res=>res.json()).then(data=>setForm(data));  
+    },[]);
+
     return (
-        <div className="border border-red-500 border-5 w-screen h-screen bg-black items-center flex flex-col">
-            <h1 className="text-5xl p-5 font-bold">Formulario de Creación de Autores</h1>
+        <div className="bg-black items-center flex flex-col text-white w-full h-full">
+            <h1 className="text-5xl p-5 font-bold">Editar a al autor</h1>
             <form className="w-full flex flex-col items-center justify-center" onSubmit={handleSubmit}>
+                <div className="flex flex-col w-3/4">
+                    <label htmlFor="name">ID</label>
+                    <input 
+                    id="id"
+                    name="id"
+                    type="number"
+                    value={id}
+                    className="bg-white text-gray-500 rounded-md p-2"
+                    readOnly>
+                    </input>
+                </div>
                 <div className="flex flex-col w-3/4">
                     <label htmlFor="name">Nombre</label>
                     <input 
@@ -157,13 +171,12 @@ const FormCreacion = () => {
                     name="enviar"
                     type="submit"
                     className="bg-red-500 text-white rounded-md p-2 hover:bg-red-800"
-                    >Enviar
+                    >Editar
                     </button>
                 </div>
             </form>
         </div>
-
     );
 };
 
-export default FormCreacion;
+export default FormEdicion;
