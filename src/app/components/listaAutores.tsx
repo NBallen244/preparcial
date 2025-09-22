@@ -9,6 +9,8 @@ export interface Autor {
     name:string;
     description:string;
     image:string;
+    books?:object[];
+    prizes?:object[];
 };
 
 const ListaAutores= ()=> {
@@ -21,11 +23,29 @@ const ListaAutores= ()=> {
     },[]);
 
     const eliminarAutor = async (id:number) => {
-        const eliminar=confirm(`¿Está seguro que desea eliminar este autor con el id ${id}?`);
+        const eliminar=confirm(`¿Está seguro que desea eliminar este autor con el id ${id}? Ello eliminará todos sus libros y premios asociados.`);
         if (!eliminar) return;
-        const res = await fetch(`http://127.0.0.1:8080/api/authors/${id}`, {
-            method: 'DELETE'
-        });
+        const eliminacion= async ()=> {
+            const data=await fetch(`http://127.0.0.1:8080/api/authors/${id}`, {
+                method: 'GET'
+            });
+            const autor=await data.json();
+            for (const libro of autor.books) {
+                await fetch(`http://127.0.0.1:8080/api/authors/${id}/books/${libro.id}`, {
+                    method: 'DELETE'
+                });
+            }
+            for (const premio of autor.prizes) {
+                await fetch(`http://127.0.0.1:8080/api/prizes/${premio.id}/author`, {
+                    method: 'DELETE'
+                });
+            }
+            return await fetch(`http://127.0.0.1:8080/api/authors/${id}`, {
+                method: 'DELETE'
+            });
+
+        };
+        const res = await eliminacion();
         if (res.ok) {
             setAutores(autores.filter(autor => autor.id !== id));
             alert("Autor eliminado con éxito. Revisa los autores nuevamente");
